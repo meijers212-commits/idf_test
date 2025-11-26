@@ -1,12 +1,9 @@
 import csv
 import io
-from fastapi import UploadFile, File, HTTPException
-from sqlalchemy import MetaData
+from fastapi import UploadFile, HTTPException
 from sqlmodel import Session
-
-from db.init_db import engine
 from sqlalchemy import MetaData, Table, Column, String
-
+from db.init_db import engine
 
 def convert_csv_to_matrix(file: UploadFile):
 
@@ -25,8 +22,6 @@ def convert_csv_to_matrix(file: UploadFile):
 
     return rows
 
-
-
 def create_table_from_csv(table_name: str, rows: list[list[str]]):
     headers = rows[0]
     data = rows[1:]
@@ -44,20 +39,28 @@ def create_table_from_csv(table_name: str, rows: list[list[str]]):
 
     with engine.connect() as conn:
         for row in data:
+            if not row[0].isdigit() and not row[0].startswith("8"):
+                continue
             data_dict = {headers[i]: row[i] for i in range(len(headers))}
             conn.execute(new_table.insert().values(**data_dict))
 
         conn.commit()
 
+def insert_csv_to_existing_table(table_name, rows: list[list[str]]):
+    headers = rows[0]
+    data = rows[1:]
 
-def insert_csv_to_existing_table(table_name,rows: list[list[str]]):
-    headers = rows[0]       # כותרות CSV
-    data = rows[1:]         # שורות נתונים
 
-    with Session(engine) as session:
-        for row in data:
-            item_data = {headers[i]: row[i] for i in range(len(headers))}
-            table = table_name(**item_data)
-            session.add(table)
+    try:
+        with Session(engine) as session:
+            for row in data:
+                if not row[0].isdigit() and not row[0].startswith("8"):
+                    continue
+                item_data = {headers[i]: row[i] for i in range(len(headers))}
+                table = table_name(**item_data)
+                session.add(table)
 
-        session.commit()
+            session.commit()
+    except Exception as e:
+        print(e)
+

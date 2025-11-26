@@ -1,7 +1,10 @@
 from sqlmodel import SQLModel,Field
 from  typing import Optional
 
-class Apartments(SQLModel,table=True):
+class Drom(SQLModel,table=True):
+    prymery: int = Field(default=None,primary_key=True)
     apartment_id: int
-    room_id: int = Field(primary_key=True)
-    count_solders_in_room: Optional[int] = Field(default=None)
+    room_id: int
+    count_solders_in_room: Optional[int] = Field(default=0)
+
+
